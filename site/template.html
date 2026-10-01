@@ -1,59 +1,131 @@
 <!DOCTYPE html>
 <html lang="nl"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Waar blijft het belastinggeld? Rijksuitgaven per ministerie</title>
+<title>Waar blijft het belastinggeld? · Rijksuitgaven</title>
 <style>
-:root{--bg:#fafaf7;--fg:#1c1f26;--mut:#5f6673;--card:#fff;--line:#e2e2dc;--acc:#1d4ed8}
-@media(prefers-color-scheme:dark){:root{--bg:#14161a;--fg:#eceef2;--mut:#9aa1ae;--card:#1c1f26;--line:#2b303a;--acc:#7aa2ff}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 Georgia,serif}
-main{max-width:920px;margin:auto;padding:24px 16px 60px}h1{font-size:1.9rem;margin:.2em 0}h2{font-size:1.25rem;margin-top:2em}
-.mut{color:var(--mut)}.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:10px 0}
-select,button{font:15px system-ui;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--fg)}
-table{width:100%;border-collapse:collapse;font:14px system-ui}th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left}
-td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}.bar{height:8px;background:var(--acc);border-radius:4px;min-width:1px}
-.wrap{overflow-x:auto}tr.m{cursor:pointer}tr.m:hover{background:var(--line)}a{color:var(--acc)}
-</style></head><body><main>
-<h1>Waar blijft het belastinggeld?</h1>
-<p class="mut" id="meta"></p>
-<div class="card"><label>Jaar <select id="yr"></select></label>
-<label style="margin-left:12px"><input type="checkbox" id="net"> Doorgesluisde bijdragen tussen hoofdstukken aftrekken</label>
-<p class="mut" id="soort" style="margin:.6em 0 0"></p></div>
-<h2>Uitgaven per ministerie</h2>
-<div class="card wrap"><table id="tm"></table><p class="mut" style="margin:.6em 0 0;font-size:13px">Klik op een ministerie voor de uitsplitsing.</p></div>
-<div id="detail"></div>
-<h2>Grootste afzonderlijke regelingen</h2><div class="card wrap"><table id="td"></table></div>
-<h2>Signalen voor nader onderzoek</h2><div id="sig"></div>
-<h2>Methode en beperkingen</h2><div class="card"><p id="meth"></p><p class="mut" id="ctl"></p></div>
-<div id="frm"></div>
-</main>
+:root{--bg:#f6f7f9;--fg:#171a21;--mut:#626b7a;--card:#fff;--line:#e3e6eb;--acc:#2447c9;--acc2:#e8edff;--pos:#b4541a;--neg:#1b7a4b}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1115;--fg:#e9ecf2;--mut:#98a1b1;--card:#181b22;--line:#2a2f3a;--acc:#86a5ff;--acc2:#222b4a;--pos:#f0a070;--neg:#6fd3a0}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.in{max-width:1040px;margin:auto;padding:12px 16px}
+h1{font-size:1.25rem;margin:0}h2{font-size:1.1rem;margin:0 0 10px}h3{font-size:.95rem;margin:16px 0 6px}
+.top{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+input[type=search],select{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg)}
+input[type=search]{flex:1;min-width:200px}
+nav{display:flex;gap:4px;flex-wrap:wrap;margin-top:10px}
+nav button,.btn{font:inherit;font-weight:600;font-size:14px;padding:6px 12px;border:1px solid var(--line);border-radius:99px;background:transparent;color:var(--fg);cursor:pointer}
+nav button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+main{max-width:1040px;margin:auto;padding:16px 16px 60px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:14px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}.kpi b{display:block;font-size:1.35rem}.mut{color:var(--mut);font-size:13px}
+.stack{display:flex;height:22px;border-radius:6px;overflow:hidden;margin:8px 0}.stack i{display:block;height:100%}
+.leg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--mut)}.leg span:before{content:"";display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--c);margin-right:5px}
+.wrap{overflow-x:auto}table{width:100%;border-collapse:collapse}th,td{padding:8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut);white-space:nowrap}th[data-a=sort]{cursor:pointer}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr[data-a]{cursor:pointer}tr[data-a]:hover td{background:var(--acc2)}
+.bar{height:6px;border-radius:3px;background:var(--acc);margin-top:4px;min-width:1px}
+.up{color:var(--pos)}.dn{color:var(--neg)}.lnk{color:var(--acc);cursor:pointer;text-decoration:underline;background:none;border:0;font:inherit;padding:0}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px}
+.tag{font-size:12px;background:var(--acc2);color:var(--acc);padding:1px 8px;border-radius:99px;white-space:nowrap}
+.row{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
+</style></head><body>
+<header><div class="in">
+<div class="top"><h1>Waar blijft het belastinggeld?</h1><span class="mut" id="meta"></span></div>
+<div class="ctl">
+<select id="yr" aria-label="Jaar"></select>
+<input type="search" id="q" placeholder="Zoek ministerie, beleidsartikel, instrument of regeling…" aria-label="Zoeken">
+<label class="mut"><input type="checkbox" id="net"> Doorgesluisde bijdragen aftrekken</label>
+</div>
+<nav id="tabs"></nav>
+</div></header>
+<main><p class="mut" id="soort"></p><div id="view"></div><div id="frm"></div></main>
 <script>
 const D=/*__DATA__*/null;
-const $=id=>document.getElementById(id);
-const eur=v=>(v/1e9>=1?(v/1e9).toLocaleString('nl-NL',{maximumFractionDigits:1})+' mld':(v/1e6).toLocaleString('nl-NL',{maximumFractionDigits:0})+' mln');
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const years=Object.keys(D.jaren);
-$('yr').innerHTML=years.map(y=>`<option>${y}</option>`).join('');$('yr').value=years[years.length-1];
-$('meta').textContent='Bron: Budgettaire Tabellen Rijksbegroting (Ministerie van Financiën, CC-0). Gegenereerd '+D.gegenereerd.slice(0,10)+'.';
-$('meth').textContent=D.methode;$('ctl').textContent=D.controle.length?('Controlewaarschuwingen: '+D.controle.join('; ')):'Controle: instrumenten sluiten aan op artikeltotalen.';
-function val(m,y){let v=m.per_jaar[y]||0;if($('net').checked)v-=(m.doorgesluisd[y]||0);return v}
-function draw(){
- const y=$('yr').value,j=D.jaren[y];
- $('soort').textContent=`Jaar ${y}: ${j.soort==='realisatie'?'gerealiseerde uitgaven':'geraamde uitgaven'} (fase ${j.fase}).`;
- const rows=D.ministeries.map(m=>({m,v:val(m,y)})).filter(r=>r.v>0).sort((a,b)=>b.v-a.v),max=rows[0]?rows[0].v:1;
- $('tm').innerHTML='<tr><th>Hoofdstuk</th><th class="n">Uitgaven</th><th style="width:30%"></th></tr>'+rows.map(r=>`<tr class="m" data-h="${esc(r.m.naam)}"><td>${esc(r.m.naam)}</td><td class="n">€ ${eur(r.v)}</td><td><div class="bar" style="width:${r.v/max*100}%"></div></td></tr>`).join('');
- document.querySelectorAll('tr.m').forEach(t=>t.onclick=()=>detail(t.dataset.h,y));
- const t=D.grootste_regelingen.filter(x=>String(x.jaar)===y).slice(0,25);
- $('td').innerHTML='<tr><th>Regeling</th><th>Hoofdstuk</th><th class="n">Bedrag</th></tr>'+t.map(x=>`<tr><td>${esc(x.regeling)}</td><td>${esc(x.hoofdstuk)}</td><td class="n">€ ${eur(x.bedrag)}</td></tr>`).join('');
- $('detail').innerHTML='';
+const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const Y=Object.keys(D.jaren).sort(),DS="Bijdrage aan (andere) begrotingshoofdstukken";
+const S={y:Y[Y.length-1],t:'overzicht',m:null,q:'',n:false,k:'v',d:-1,open:{}};
+const H=new URLSearchParams(location.hash.slice(1));
+if(Y.includes(H.get('y')))S.y=H.get('y');if(H.get('t'))S.t=H.get('t');if(H.get('m'))S.m=H.get('m');S.q=H.get('q')||'';S.n=H.get('n')==='1';
+const fmt=v=>{const a=Math.abs(v),s=v<0?'-':'';if(a>=1e9)return s+'€ '+(a/1e9).toLocaleString('nl-NL',{minimumFractionDigits:1,maximumFractionDigits:1})+' mld';if(a>=1e6)return s+'€ '+Math.round(a/1e6).toLocaleString('nl-NL')+' mln';return s+'€ '+Math.round(a).toLocaleString('nl-NL')};
+const prevOf=y=>Y[Y.indexOf(y)-1],pc=(a,b)=>b?(a/b-1)*100:null;
+const val=(m,y)=>(m.per_jaar[y]||0)-(S.n?(m.doorgesluisd[y]||0):0);
+const dlt=p=>p===null?'<span class="mut">–</span>':`<span class="${p>0?'up':'dn'}">${p>0?'▲':'▼'} ${Math.abs(p).toLocaleString('nl-NL',{maximumFractionDigits:1})}%</span>`;
+const pal=i=>`hsl(${(i*47+220)%360} 55% 50%)`;
+function spark(m){const v=Y.map(y=>val(m,y)),mx=Math.max(...v,1),w=80,h=22;if(v.length<2)return'';
+ return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><polyline fill="none" stroke="currentColor" stroke-width="1.5" points="${v.map((x,i)=>`${(i/(v.length-1)*(w-2)+1).toFixed(1)},${(h-2-x/mx*(h-4)).toFixed(1)}`).join(' ')}"/></svg>`}
+const ms=()=>D.ministeries.map(m=>{const v=val(m,S.y),p=prevOf(S.y)?val(m,prevOf(S.y)):0;return{m,naam:m.naam,v,p:pc(v,p)}}).filter(r=>r.v>0);
+const total=()=>ms().reduce((a,r)=>a+r.v,0);
+const inY=a=>a.filter(x=>String(x.jaar)===S.y);
+function csv(name,rows){S.csv={name,rows}}
+function tableMin(rows){const T=rows.reduce((a,r)=>a+r.v,0),pv=prevOf(S.y);
+ rows.sort((a,b)=>S.k==='naam'?S.d*a.naam.localeCompare(b.naam,'nl'):S.d*(((S.k==='p'?a.p:a.v)||0)-((S.k==='p'?b.p:b.v)||0)));
+ const mx=Math.max(...rows.map(r=>r.v),1),ar=k=>S.k===k?(S.d>0?' ▲':' ▼'):'';
+ csv('ministeries_'+S.y,[['Hoofdstuk','Uitgaven EUR','Aandeel %'],...rows.map(r=>[r.naam,r.v,(r.v/T*100).toFixed(2)])]);
+ return `<div class="wrap"><table><tr><th data-a="sort" data-v="naam">Hoofdstuk${ar('naam')}</th><th class="n" data-a="sort" data-v="v">Uitgaven${ar('v')}</th><th class="n">Aandeel</th>${pv?`<th class="n" data-a="sort" data-v="p">t.o.v. ${pv}${ar('p')}</th>`:''}<th>Trend</th></tr>`+
+ rows.map(r=>`<tr data-a="min" data-v="${esc(r.naam)}"><td>${esc(r.naam)}<div class="bar" style="width:${r.v/mx*100}%"></div></td><td class="n">${fmt(r.v)}</td><td class="n">${(r.v/T*100).toFixed(1)}%</td>${pv?`<td class="n">${dlt(r.p)}</td>`:''}<td>${spark(r.m)}</td></tr>`).join('')+`</table></div>`}
+function vOverzicht(){const r=ms(),T=total(),top=[...r].sort((a,b)=>b.v-a.v),pv=prevOf(S.y),PT=pv?D.ministeries.reduce((a,m)=>a+val(m,pv),0):0;
+ const t8=top.slice(0,8),rest=T-t8.reduce((a,x)=>a+x.v,0);
+ return `<div class="kpis"><div class="kpi"><span class="mut">Totale uitgaven ${S.y}</span><b>${fmt(T)}</b>${pv?dlt(pc(T,PT))+` <span class="mut">t.o.v. ${pv}</span>`:''}</div>
+ <div class="kpi"><span class="mut">Grootste hoofdstuk</span><b>${top[0]?esc(top[0].naam):'–'}</b><span class="mut">${top[0]?fmt(top[0].v)+' · '+(top[0].v/T*100).toFixed(0)+'%':''}</span></div>
+ <div class="kpi"><span class="mut">Hoofdstukken</span><b>${r.length}</b><span class="mut">met uitgaven in ${S.y}</span></div></div>
+ <div class="card"><h2>Verdeling van de uitgaven</h2><div class="stack">${t8.map((x,i)=>`<i title="${esc(x.naam)}: ${fmt(x.v)}" style="width:${x.v/T*100}%;background:${pal(i)}"></i>`).join('')}<i title="Overig" style="width:${rest/T*100}%;background:var(--line)"></i></div>
+ <div class="leg">${t8.map((x,i)=>`<span style="--c:${pal(i)}">${esc(x.naam)} ${(x.v/T*100).toFixed(0)}%</span>`).join('')}<span style="--c:var(--line)">Overig ${(rest/T*100).toFixed(0)}%</span></div></div>
+ <div class="card"><div class="row"><h2>Uitgaven per hoofdstuk</h2><button class="btn" data-a="csv">Download CSV</button></div>${tableMin(r)}<p class="mut">Klik op een hoofdstuk voor de uitsplitsing.</p></div>`}
+function lst(title,rows,T,key){const mx=Math.max(...rows.map(r=>r.bedrag),1);
+ return `<div><h3>${title}</h3><div class="wrap"><table>${rows.map(r=>`<tr><td>${esc(r[key])}<div class="bar" style="width:${r.bedrag/mx*100}%"></div></td><td class="n">${fmt(r.bedrag)}</td><td class="n mut">${T?(r.bedrag/T*100).toFixed(1)+'%':''}</td></tr>`).join('')||'<tr><td class="mut">Geen gegevens</td></tr>'}</table></div></div>`}
+function vMin(){const m=D.ministeries.find(x=>x.naam===S.m);if(!m)return'<p>Niet gevonden.</p>';
+ const T=val(m,S.y),mx=Math.max(...Y.map(y=>val(m,y)),1);
+ const art=inY(D.artikelen).filter(a=>a.hoofdstuk===S.m).sort((a,b)=>b.bedrag-a.bedrag);
+ const ins=inY(D.instrumenten).filter(a=>a.hoofdstuk===S.m&&!(S.n&&a.instrument===DS)).sort((a,b)=>b.bedrag-a.bedrag);
+ const reg=inY(D.grootste_regelingen).filter(a=>a.hoofdstuk===S.m).sort((a,b)=>b.bedrag-a.bedrag).slice(0,25);
+ csv('artikelen_'+S.m+'_'+S.y,[['Artikel','Uitgaven EUR'],...art.map(a=>[a.artikel,a.bedrag])]);
+ return `<p><button class="lnk" data-a="back">← Alle hoofdstukken</button></p><div class="card"><div class="row"><h2>${esc(m.naam)} · ${S.y}</h2><button class="btn" data-a="csv">Download CSV (artikelen)</button></div>
+ <div class="kpis"><div class="kpi"><span class="mut">Uitgaven</span><b>${fmt(T)}</b></div><div class="kpi"><span class="mut">Beleidsartikelen</span><b>${art.length}</b></div></div>
+ <h3>Verloop per jaar</h3><svg viewBox="0 0 ${Y.length*90} 90" width="100%" style="max-width:${Y.length*110}px">${Y.map((y,i)=>{const v=val(m,y),h=v/mx*55;return `<g><rect x="${i*90+10}" y="${70-h}" width="64" height="${h}" rx="3" fill="${y===S.y?'var(--acc)':'var(--line)'}"><title>${y}: ${fmt(v)}</title></rect><text x="${i*90+42}" y="85" text-anchor="middle" font-size="11" fill="currentColor">${y}</text><text x="${i*90+42}" y="${64-h}" text-anchor="middle" font-size="10" fill="currentColor">${fmt(v).replace('€ ','')}</text></g>`}).join('')}</svg></div>
+ <div class="two"><div class="card">${lst('Waaraan: beleidsartikelen',art,T,'artikel')}</div><div class="card">${lst('Hoe: financiële instrumenten',ins,T,'instrument')}</div></div>
+ <div class="card">${lst('Grootste afzonderlijke regelingen',reg,T,'regeling')}<p class="mut">Alleen de grootste regelingen van het Rijk zijn opgenomen.</p></div>`}
+function vInstr(){const g={};inY(D.instrumenten).forEach(x=>{if(S.n&&x.instrument===DS)return;(g[x.instrument]=g[x.instrument]||{v:0,h:{}});g[x.instrument].v+=x.bedrag;g[x.instrument].h[x.hoofdstuk]=(g[x.instrument].h[x.hoofdstuk]||0)+x.bedrag});
+ const rows=Object.entries(g).sort((a,b)=>b[1].v-a[1].v),T=rows.reduce((a,r)=>a+r[1].v,0),mx=rows[0]?rows[0][1].v:1;
+ csv('instrumenten_'+S.y,[['Instrument','Uitgaven EUR'],...rows.map(r=>[r[0],r[1].v])]);
+ return `<div class="card"><div class="row"><h2>Hoe wordt het geld uitgegeven? Per instrument, alle hoofdstukken</h2><button class="btn" data-a="csv">Download CSV</button></div><div class="wrap"><table>`+
+ rows.map(([n,o])=>`<tr data-a="open" data-v="${esc(n)}"><td>${esc(n)}<div class="bar" style="width:${o.v/mx*100}%"></div></td><td class="n">${fmt(o.v)}</td><td class="n mut">${(o.v/T*100).toFixed(1)}%</td></tr>`+(S.open[n]?`<tr><td colspan="3"><table>${Object.entries(o.h).sort((a,b)=>b[1]-a[1]).map(([h,v])=>`<tr data-a="min" data-v="${esc(h)}"><td>${esc(h)}</td><td class="n">${fmt(v)}</td></tr>`).join('')}</table></td></tr>`:'')).join('')+`</table></div><p class="mut">Klik op een instrument om te zien welke hoofdstukken het gebruiken.</p></div>`}
+function vReg(){const r=inY(D.grootste_regelingen).sort((a,b)=>b.bedrag-a.bedrag).slice(0,100);
+ csv('regelingen_'+S.y,[['Regeling','Hoofdstuk','Artikel','Uitgaven EUR'],...r.map(x=>[x.regeling,x.hoofdstuk,x.artikel,x.bedrag])]);
+ return `<div class="card"><div class="row"><h2>Grootste afzonderlijke regelingen ${S.y}</h2><button class="btn" data-a="csv">Download CSV</button></div><div class="wrap"><table>${r.map(x=>`<tr data-a="min" data-v="${esc(x.hoofdstuk)}"><td>${esc(x.regeling)}<div class="mut">${esc(x.artikel)}</div></td><td>${esc(x.hoofdstuk)}</td><td class="n">${fmt(x.bedrag)}</td></tr>`).join('')}</table></div></div>`}
+function vZoek(){const q=S.q.toLowerCase(),hit=s=>String(s).toLowerCase().includes(q),sec=(t,rows,f)=>rows.length?`<div class="card"><h2>${t} <span class="tag">${rows.length}</span></h2><div class="wrap"><table>${rows.slice(0,15).map(f).join('')}</table></div>${rows.length>15?`<p class="mut">+ ${rows.length-15} meer; verfijn je zoekopdracht.</p>`:''}</div>`:'';
+ const row=(a,b,v,h)=>`<tr data-a="min" data-v="${esc(h)}"><td>${esc(a)}<div class="mut">${esc(b)}</div></td><td class="n">${fmt(v)}</td></tr>`;
+ const out=sec('Hoofdstukken',ms().filter(r=>hit(r.naam)).sort((a,b)=>b.v-a.v),r=>row(r.naam,'Hoofdstuk',r.v,r.naam))+
+ sec('Beleidsartikelen',inY(D.artikelen).filter(a=>hit(a.artikel)).sort((a,b)=>b.bedrag-a.bedrag),a=>row(a.artikel,a.hoofdstuk,a.bedrag,a.hoofdstuk))+
+ sec('Instrumenten',inY(D.instrumenten).filter(a=>hit(a.instrument)).sort((a,b)=>b.bedrag-a.bedrag),a=>row(a.instrument,a.hoofdstuk,a.bedrag,a.hoofdstuk))+
+ sec('Regelingen',inY(D.grootste_regelingen).filter(a=>hit(a.regeling)).sort((a,b)=>b.bedrag-a.bedrag),a=>row(a.regeling,a.hoofdstuk+' · '+a.artikel,a.bedrag,a.hoofdstuk));
+ return `<p class="mut">Resultaten voor “${esc(S.q)}” in ${S.y}. <button class="lnk" data-a="clear">Zoekopdracht wissen</button></p>`+(out||'<div class="card">Niets gevonden. Probeer een korter zoekwoord.</div>')}
+function vInfo(){return `<div class="card"><h2>Signalen voor nader onderzoek</h2>${D.signalen.length?D.signalen.map(s=>`<p><b>${esc(s.type)}${s.hoofdstuk?': '+esc(s.hoofdstuk):''}</b>${s.pct!==undefined?` · ${s.van}→${s.naar}: ${s.pct>0?'+':''}${s.pct}% (${fmt(s.verschil)})`:''}<br><span class="mut">${esc(s.let_op)}</span></p>`).join(''):'<p class="mut">Geen signalen.</p>'}</div>
+ <div class="card"><h2>Methode en beperkingen</h2><p>${esc(D.methode)}</p><p class="mut">${D.controle.length?'Controlewaarschuwingen: '+esc(D.controle.join('; ')):'Controle: instrumenten sluiten aan op artikeltotalen.'}</p>
+ <p class="mut">Bron: Budgettaire Tabellen Rijksbegroting, Ministerie van Financiën (CC-0). Gegenereerd ${esc(D.gegenereerd.slice(0,10))}.</p></div>`}
+const TABS=[['overzicht','Overzicht'],['instrumenten','Per instrument'],['regelingen','Regelingen'],['info','Signalen & methode']];
+function render(){
+ const j=D.jaren[S.y];$('#soort').textContent=`${S.y}: ${j.soort==='realisatie'?'gerealiseerde uitgaven':'geraamde uitgaven'} (fase ${j.fase}).`;
+ $('#tabs').innerHTML=TABS.map(([k,l])=>`<button data-a="tab" data-v="${k}" class="${S.t===k&&!S.m&&S.q.length<2?'on':''}">${l}</button>`).join('');
+ $('#view').innerHTML=S.q.length>=2?vZoek():S.m?vMin():S.t==='instrumenten'?vInstr():S.t==='regelingen'?vReg():S.t==='info'?vInfo():vOverzicht();
+ try{history.replaceState(null,'','#'+new URLSearchParams({y:S.y,t:S.t,m:S.m||'',q:S.q,n:S.n?1:0}))}catch(e){}
 }
-function detail(h,y){
- const ins=D.instrumenten.filter(i=>String(i.jaar)===y&&i.hoofdstuk===h).sort((a,b)=>b.bedrag-a.bedrag);
- const art=D.artikelen.filter(i=>String(i.jaar)===y&&i.hoofdstuk===h).sort((a,b)=>b.bedrag-a.bedrag);
- const tb=(t,r,k)=>`<h3>${t}</h3><table>${r.map(x=>`<tr><td>${esc(x[k])}</td><td class="n">€ ${eur(x.bedrag)}</td></tr>`).join('')}</table>`;
- $('detail').innerHTML=`<div class="card wrap"><h2 style="margin-top:0">${esc(h)} · ${y}</h2>${tb('Waaraan (per beleidsartikel)',art,'artikel')}${tb('Hoe (per financieel instrument)',ins,'instrument')}</div>`;
- $('detail').scrollIntoView({behavior:'smooth'});
-}
-$('yr').onchange=draw;$('net').onchange=draw;draw();
-$('sig').innerHTML=D.signalen.length?D.signalen.map(s=>`<div class="card"><strong>${esc(s.type)}${s.hoofdstuk?': '+esc(s.hoofdstuk):''}</strong>${s.pct!==undefined?` · ${s.van}→${s.naar}: ${s.pct>0?'+':''}${s.pct}% (${s.verschil>0?'+':''}€ ${eur(Math.abs(s.verschil))})`:''}<br><span class="mut">${esc(s.let_op)}</span></div>`).join(''):'<p class="mut">Geen signalen.</p>';
-const EP='';if(EP){$('frm').innerHTML='<h2>Verzoek indienen</h2><form class="card" method="post" action="'+EP+'"><p><input name="onderwerp" placeholder="Onderwerp" required style="width:100%"></p><p><textarea name="vraag" rows="4" placeholder="Wat wil je weten?" required style="width:100%"></textarea></p><button>Versturen</button></form>'}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a,v=t.dataset.v;
+ if(a==='tab'){S.t=v;S.m=null;S.q='';$('#q').value=''}
+ else if(a==='min'){S.m=v;S.q='';$('#q').value='';scrollTo(0,0)}
+ else if(a==='back')S.m=null;
+ else if(a==='clear'){S.q='';$('#q').value=''}
+ else if(a==='sort'){S.d=S.k===v?-S.d:(v==='naam'?1:-1);S.k=v}
+ else if(a==='open')S.open[v]=!S.open[v];
+ else if(a==='csv'&&S.csv){const s=S.csv.rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(';')).join('\n'),l=document.createElement('a');
+  l.href=URL.createObjectURL(new Blob(['\ufeff'+s],{type:'text/csv'}));l.download=S.csv.name.replace(/\W+/g,'_')+'.csv';l.click();return}
+ render()});
+let tm;$('#q').addEventListener('input',e=>{clearTimeout(tm);tm=setTimeout(()=>{S.q=e.target.value.trim();if(S.q)S.m=null;render()},200)});
+$('#yr').innerHTML=Y.map(y=>`<option>${y}</option>`).join('');$('#yr').value=S.y;$('#yr').onchange=e=>{S.y=e.target.value;render()};
+$('#net').checked=S.n;$('#net').onchange=e=>{S.n=e.target.checked;render()};$('#q').value=S.q;
+$('#meta').textContent='Bron: Rijksbegroting · bijgewerkt '+D.gegenereerd.slice(0,10);
+render();
+const EP='';if(EP){$('#frm').innerHTML='<div class="card"><h2>Verzoek indienen</h2><form method="post" action="'+EP+'"><p><input name="onderwerp" placeholder="Onderwerp" required style="width:100%"></p><p><textarea name="vraag" rows="4" placeholder="Wat wil je weten?" required style="width:100%"></textarea></p><button class="btn">Versturen</button></form></div>'}
 </script></body></html>
