@@ -37,7 +37,7 @@ def discover(years):
         except Exception as e:  # 404 of netwerkfout: melden, niet crashen
             print(f"[waarschuwing] geen datasetpagina voor {y}: {e}", file=sys.stderr)
             continue
-        urls = sorted(set(CSV_RE.findall(html)))
+        urls = sorted(u for u in set(CSV_RE.findall(html)) if 'incl' not in u.lower())
         print(f"{y}: {len(urls)} CSV-bestand(en)")
         found += urls
     return found
@@ -51,15 +51,26 @@ def to_int(s):
         return 0
 
 
+REQUIRED = ["VUO", "Totaal", "Hoofdstuknummer", "Hoofdstuknaam", "Artikelnummer", "Artikelnaam",
+            "Artikelonderdeelnummer", "Instrumentnummer", "Instrumentnaam", "Detailnummer", "Detailnaam"]
+
+
 def read_rows(text, source):
     rd = csv.DictReader(io.StringIO(text), delimiter=";")
-    cols = rd.fieldnames or []
+    rd.fieldnames = [(c or "").strip() for c in (rd.fieldnames or [])]
+    cols = rd.fieldnames
     col = next((c for c in AMOUNT_PREF if c in cols), None)
-    if not col:
-        print(f"[waarschuwing] geen bekende bedragkolom in {source}", file=sys.stderr)
+    missing = [c for c in REQUIRED if c not in cols]
+    if not col or missing:
+        print(f"[overgeslagen] onbekend formaat: {source}\n   kolommen: {';'.join(cols)}", file=sys.stderr)
         return
+    name = source.replace("%20", " ")
+    m_year = re.search(r"(20\d\d)", name)
+    m_fase = re.search(r"[_ ](OWB|OW|O1|I1|SBS|I2|O2|JV)[_ .]", name)
     kind = "realisatie" if col == "Realisatie" else "raming"
     for r in rd:
+        r["Begrotingsjaar"] = r.get("Begrotingsjaar") or (m_year.group(1) if m_year else "0")
+        r["Fase"] = r.get("Fase") or (m_fase.group(1) if m_fase else "?")
         r["_amt"] = to_int(r.get(col)) * UNIT
         r["_kind"], r["_col"], r["_src"] = kind, col, source
         yield r
@@ -74,7 +85,7 @@ def aggregate(rows):
     for r in rows:
         if r["VUO"] != "U":
             continue
-        y, f, k = int(r["Begrotingsjaar"]), r["Fase"], r["_kind"]
+        y, f, k = to_int(r["Begrotingsjaar"]), r["Fase"], r["_kind"]
         h, hn = r["Hoofdstuknummer"], r["Hoofdstuknaam"]
         meta[(y, f)] = (r["_src"], r["_col"], k)
         no_ond, no_ins, no_det = not r["Artikelonderdeelnummer"], not r["Instrumentnummer"], not r["Detailnummer"]
