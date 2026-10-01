@@ -56,7 +56,8 @@ REQUIRED = ["VUO", "Totaal", "Hoofdstuknummer", "Hoofdstuknaam", "Artikelnummer"
 
 
 def read_rows(text, source):
-    rd = csv.DictReader(io.StringIO(text), delimiter=";")
+   first = text.split("\n", 1)[0]
+   rd = csv.DictReader(io.StringIO(text), delimiter=";" if first.count(";") >= first.count(",") else ",")
     rd.fieldnames = [(c or "").strip() for c in (rd.fieldnames or [])]
     cols = rd.fieldnames
     col = next((c for c in AMOUNT_PREF if c in cols), None)
