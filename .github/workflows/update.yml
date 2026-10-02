@@ -2,16 +2,34 @@ name: Update uitgavendata
 on:
   schedule: [{cron: "0 5 * * 1"}]
   workflow_dispatch:
-permissions: {contents: read, pages: write, id-token: write}
+  pull_request:
+  push:
+    branches: [main]
+permissions: {contents: read}
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: {name: github-pages}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
-      - run: python pipeline.py --years 2021-2026
-      - uses: actions/upload-pages-artifact@v3
+      - run: python -m unittest -v
+      - run: node --check dashboard-extra.js
+      - if: github.event_name != 'pull_request'
+        run: sudo apt-get update && sudo apt-get install -y libarchive-tools
+      - if: github.event_name != 'pull_request'
+        run: python pipeline.py
+      - if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
         with: {path: site}
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    environment: {name: github-pages}
+    permissions: {pages: write, id-token: write}
+    steps:
       - uses: actions/deploy-pages@v4
