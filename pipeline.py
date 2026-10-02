@@ -7,6 +7,7 @@ from pathlib import Path
 from pipeline_sources import DataError, discover, local_sources
 from pipeline_model import build
 from pipeline_organisations import enrich
+from pipeline_asylum import build_asylum
 
 ROOT = Path(__file__).parent
 
@@ -16,6 +17,7 @@ def render(data):
     payload = json.dumps(data, ensure_ascii=False).replace('<', '\\u003c').replace('\u2028', '\\u2028').replace('\u2029', '\\u2029')
     html = template.replace('/*__DATA__*/null', payload)
     extension = (ROOT / 'dashboard-extra.js').read_text(encoding='utf-8')
+    extension += '\n' + (ROOT / 'dashboard-asiel.js').read_text(encoding='utf-8')
     html = html.replace('</script>', '\n' + extension + '\n</script>')
     if '/*__DATA__*/null' not in template:
         raise DataError('Datamarker ontbreekt in template')
@@ -37,6 +39,7 @@ def main():
     data = build(snapshots, years)
     data['gegenereerd'] = dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds')
     enrich(data, args.cache, offline=bool(args.local), refresh=args.refresh)
+    build_asylum(data)
     html = render(data)
     for path, content in ((ROOT / 'data/uitgaven.json', json.dumps(data, ensure_ascii=False, indent=1)),
                           (ROOT / 'site/index.html', html)):
